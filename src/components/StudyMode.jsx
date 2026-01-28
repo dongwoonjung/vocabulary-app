@@ -134,9 +134,13 @@ const StudyMode = ({ onMarkAsLearned, onMarkAsKnown, learnedWordIds, knownWordId
             {showExample ? '예문 숨기기' : '예문 보기'}
           </button>
 
-          {showExample && currentWord.example && (
+          {showExample && (
             <div className="example-box">
-              <p className="example-text">"{currentWord.example}"</p>
+              {currentWord.example ? (
+                <p className="example-text">"{currentWord.example}"</p>
+              ) : (
+                <p className="no-example">예문이 없습니다.</p>
+              )}
             </div>
           )}
 

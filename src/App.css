@@ -1285,3 +1285,10 @@ body {
   background: #bbdefb;
   border-color: #64b5f6;
 }
+
+/* 예문 없음 메시지 */
+.no-example {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.875rem;
+}
