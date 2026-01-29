@@ -1038,6 +1038,54 @@ body {
   margin-bottom: 1rem;
 }
 
+/* 기존 단어 알림 */
+.existing-word-notice {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.existing-word-notice .notice-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.existing-word-notice h3 {
+  color: #1e40af;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.existing-word-notice p {
+  color: #3730a3;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.existing-word-notice strong {
+  color: #1e3a8a;
+}
+
+.go-to-word-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.go-to-word-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
 /* 모달 버튼 */
 .btn-cancel {
   padding: 0.75rem 1.25rem;

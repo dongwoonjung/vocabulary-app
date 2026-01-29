@@ -1,12 +1,31 @@
 import { useState } from 'react';
 import { dictionaryApi, playPronunciation } from '../services/dictionaryApi';
 
-const AddWordModal = ({ isOpen, onClose, onAddWord }) => {
+const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
   const [word, setWord] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [wordInfo, setWordInfo] = useState(null);
   const [customMeaning, setCustomMeaning] = useState('');
+  const [existingWordInfo, setExistingWordInfo] = useState(null);
+
+  // 기본 단어 세트에서 단어 찾기
+  const findWordInSets = (searchWord) => {
+    const normalizedWord = searchWord.toLowerCase().trim();
+    for (const [setNum, setInfo] of Object.entries(wordSets)) {
+      const foundIndex = setInfo.words.findIndex(
+        w => w.toLowerCase() === normalizedWord
+      );
+      if (foundIndex !== -1) {
+        return {
+          setNumber: Number(setNum),
+          setName: setInfo.name,
+          wordIndex: foundIndex
+        };
+      }
+    }
+    return null;
+  };
 
   const handleSearch = async () => {
     if (!word.trim()) {
@@ -17,6 +36,15 @@ const AddWordModal = ({ isOpen, onClose, onAddWord }) => {
     setLoading(true);
     setError('');
     setWordInfo(null);
+    setExistingWordInfo(null);
+
+    // 먼저 기본 단어 세트에 있는지 확인
+    const existing = findWordInSets(word.trim());
+    if (existing) {
+      setExistingWordInfo(existing);
+      setLoading(false);
+      return;
+    }
 
     const { data, error: apiError } = await dictionaryApi.getWordInfo(word.trim());
 
@@ -51,7 +79,15 @@ const AddWordModal = ({ isOpen, onClose, onAddWord }) => {
     setError('');
     setWordInfo(null);
     setCustomMeaning('');
+    setExistingWordInfo(null);
     onClose();
+  };
+
+  const handleGoToExistingWord = () => {
+    if (existingWordInfo && onGoToWord) {
+      onGoToWord(existingWordInfo.setNumber);
+      handleClose();
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -76,7 +112,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord }) => {
               type="text"
               value={word}
               onChange={(e) => setWord(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="영어 단어 입력..."
               className="word-input"
               autoFocus
@@ -93,6 +129,23 @@ const AddWordModal = ({ isOpen, onClose, onAddWord }) => {
           {error && (
             <div className="error-message">
               {error}
+            </div>
+          )}
+
+          {existingWordInfo && (
+            <div className="existing-word-notice">
+              <div className="notice-icon">📚</div>
+              <h3>이미 있는 단어입니다!</h3>
+              <p>
+                <strong>"{word}"</strong>은(는)
+                <strong> {existingWordInfo.setName}</strong>에 포함되어 있습니다.
+              </p>
+              <button
+                className="go-to-word-btn"
+                onClick={handleGoToExistingWord}
+              >
+                {existingWordInfo.setName}로 이동해서 학습하기
+              </button>
             </div>
           )}
 

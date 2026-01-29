@@ -307,6 +307,12 @@ function App() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddWord={handleAddWord}
+        wordSets={wordSets}
+        onGoToWord={(setNumber) => {
+          setSelectedWordSet(setNumber);
+          setActiveTab('study');
+          setIsAddModalOpen(false);
+        }}
       />
     </div>
   );
