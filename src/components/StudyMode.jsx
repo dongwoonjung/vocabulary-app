@@ -8,7 +8,16 @@ const getRandomWordFromList = (words, excludeIds = []) => {
   return availableWords[Math.floor(Math.random() * availableWords.length)];
 };
 
-const StudyMode = ({ onMarkAsLearned, onMarkAsKnown, learnedWordIds, knownWordIds = [], allWords }) => {
+const StudyMode = ({
+  onMarkAsLearned,
+  onMarkAsKnown,
+  learnedWordIds,
+  knownWordIds = [],
+  allWords,
+  selectedWordSet,
+  setSelectedWordSet,
+  wordSets
+}) => {
   // 이미 아는 단어는 제외한 학습 대상 단어
   const studyWords = allWords.filter(w => !knownWordIds.includes(w.id));
 
@@ -67,15 +76,42 @@ const StudyMode = ({ onMarkAsLearned, onMarkAsKnown, learnedWordIds, knownWordId
 
   const isAlreadyLearned = currentWord && learnedWordIds.includes(currentWord.id);
 
+  // 단어 세트 변경 핸들러
+  const handleWordSetChange = (setNumber) => {
+    setSelectedWordSet(setNumber);
+    setCurrentWord(null);
+    setWordHistory([]);
+    setShowMeaning(false);
+    setShowExample(false);
+  };
+
   if (!currentWord || studyWords.length === 0) {
     return (
       <div className="study-container">
+        {/* 단어 세트 선택 */}
+        <div className="word-set-selector">
+          <h3>단어 세트 선택</h3>
+          <div className="word-set-buttons">
+            {Object.entries(wordSets).map(([setNum, setInfo]) => (
+              <button
+                key={setNum}
+                className={`word-set-btn ${selectedWordSet === Number(setNum) ? 'active' : ''}`}
+                onClick={() => handleWordSetChange(Number(setNum))}
+              >
+                <span className="set-name">{setInfo.name}</span>
+                <span className="set-description">{setInfo.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="empty-state success">
           <h3>학습 완료!</h3>
-          <p>모든 단어를 학습했습니다.</p>
+          <p>이 세트의 모든 단어를 학습했습니다.</p>
           <p className="stats-summary">
             암기 완료: {learnedWordIds.length}개 | 이미 아는 단어: {knownWordIds.length}개
           </p>
+          <p className="next-set-tip">다른 단어 세트를 선택해서 학습을 계속하세요!</p>
         </div>
       </div>
     );
@@ -83,6 +119,21 @@ const StudyMode = ({ onMarkAsLearned, onMarkAsKnown, learnedWordIds, knownWordId
 
   return (
     <div className="study-container">
+      {/* 단어 세트 선택 */}
+      <div className="word-set-selector compact">
+        <div className="word-set-buttons">
+          {Object.entries(wordSets).map(([setNum, setInfo]) => (
+            <button
+              key={setNum}
+              className={`word-set-btn ${selectedWordSet === Number(setNum) ? 'active' : ''}`}
+              onClick={() => handleWordSetChange(Number(setNum))}
+            >
+              <span className="set-name">{setInfo.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="study-header">
         <h2>학습 모드</h2>
         <div className="study-stats">

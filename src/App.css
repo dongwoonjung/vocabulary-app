@@ -1307,3 +1307,107 @@ body {
   font-style: italic;
   font-size: 0.875rem;
 }
+
+/* ===== 단어 세트 선택 스타일 ===== */
+.word-set-selector {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.word-set-selector h3 {
+  font-size: 1rem;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.word-set-selector.compact {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.word-set-selector.compact h3 {
+  display: none;
+}
+
+.word-set-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.word-set-btn {
+  flex: 1;
+  min-width: calc(50% - 0.25rem);
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.word-set-btn:hover {
+  border-color: #4f46e5;
+  background: #f8fafc;
+}
+
+.word-set-btn.active {
+  border-color: #4f46e5;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+.word-set-btn .set-name {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.word-set-btn.active .set-name {
+  color: white;
+}
+
+.word-set-btn .set-description {
+  display: block;
+  font-size: 0.6875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
+.word-set-btn.active .set-description {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* compact 모드에서는 description 숨김 */
+.word-set-selector.compact .word-set-btn {
+  min-width: auto;
+  padding: 0.5rem 0.75rem;
+}
+
+.word-set-selector.compact .set-description {
+  display: none;
+}
+
+.next-set-tip {
+  color: #4f46e5;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 400px) {
+  .word-set-btn {
+    min-width: 100%;
+  }
+
+  .word-set-selector.compact .word-set-btn {
+    min-width: calc(50% - 0.25rem);
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}

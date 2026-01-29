@@ -4,7 +4,7 @@ import ReviewMode from './components/ReviewMode';
 import WordList from './components/WordList';
 import AddWordModal from './components/AddWordModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { wordList, koreanMeanings } from './data/words';
+import { wordSets, koreanMeanings } from './data/words';
 import { dictionaryApi } from './services/dictionaryApi';
 import './App.css';
 
@@ -14,6 +14,10 @@ function App() {
   const [customWords, setCustomWords] = useLocalStorage('vocabulary-custom-words', []);
   const [knownWords, setKnownWords] = useLocalStorage('vocabulary-known-words', []); // 이미 아는 단어
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedWordSet, setSelectedWordSet] = useLocalStorage('vocabulary-selected-set', 1);
+
+  // 현재 선택된 단어 세트의 단어 목록
+  const currentWordList = wordSets[selectedWordSet]?.words || wordSets[1].words;
 
   // API에서 가져온 단어 데이터 캐시
   const [wordCache, setWordCache] = useLocalStorage('vocabulary-word-cache', {});
@@ -21,10 +25,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 });
 
-  // 앱 시작 시 단어 데이터 로드
+  // 앱 시작 시 또는 단어 세트 변경 시 단어 데이터 로드
   useEffect(() => {
     loadWords();
-  }, []);
+  }, [selectedWordSet]);
 
   const loadWords = async () => {
     setIsLoading(true);
@@ -33,7 +37,7 @@ function App() {
     const wordsToFetch = [];
 
     // 캐시에 없는 단어 확인
-    wordList.forEach((word, index) => {
+    currentWordList.forEach((word, index) => {
       if (wordCache[word]) {
         // 캐시에서 가져오기
         words.push({
@@ -46,7 +50,7 @@ function App() {
       }
     });
 
-    setLoadingProgress({ current: words.length, total: wordList.length });
+    setLoadingProgress({ current: words.length, total: currentWordList.length });
 
     // 캐시에 없는 단어만 API에서 가져오기 (배치 처리)
     if (wordsToFetch.length > 0) {
@@ -96,7 +100,7 @@ function App() {
         );
 
         words.push(...results);
-        setLoadingProgress({ current: words.length, total: wordList.length });
+        setLoadingProgress({ current: words.length, total: currentWordList.length });
 
         // API 요청 간 딜레이 (rate limiting 방지)
         if (i + batchSize < wordsToFetch.length) {
@@ -270,6 +274,9 @@ function App() {
             learnedWordIds={learnedWordIds}
             knownWordIds={knownWords}
             allWords={allWords}
+            selectedWordSet={selectedWordSet}
+            setSelectedWordSet={setSelectedWordSet}
+            wordSets={wordSets}
           />
         )}
         {activeTab === 'review' && (
