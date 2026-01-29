@@ -300,7 +300,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>총 {allWords.length}개 단어 | 매일 조금씩, 꾸준히 학습하세요!</p>
+        <p>매일 조금씩, 꾸준히 학습하세요!</p>
       </footer>
 
       <AddWordModal
