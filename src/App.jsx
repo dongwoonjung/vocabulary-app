@@ -222,8 +222,8 @@ function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <h1>영어 단어장</h1>
-        <p className="subtitle">고등학교 필수 영단어 학습</p>
+        <h1>지오의 영어단어장</h1>
+        <p className="subtitle">Fighting Zio!!</p>
         <button
           className="add-word-btn"
           onClick={() => setIsAddModalOpen(true)}
