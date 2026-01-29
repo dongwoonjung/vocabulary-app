@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { playPronunciation } from '../services/dictionaryApi';
+import ChatBot from './ChatBot';
 
 // 단어 배열에서 랜덤 단어 선택
 const getRandomWordFromList = (words, excludeIds = []) => {
@@ -25,6 +26,7 @@ const StudyMode = ({
   const [showMeaning, setShowMeaning] = useState(false);
   const [showExample, setShowExample] = useState(false);
   const [wordHistory, setWordHistory] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleNextWord = useCallback(() => {
     if (currentWord) {
@@ -213,6 +215,12 @@ const StudyMode = ({
             >
               Oxford 사전
             </a>
+            <button
+              className="dict-link ai-chat"
+              onClick={() => setIsChatOpen(true)}
+            >
+              💬 AI에게 질문
+            </button>
           </div>
         </div>
 
@@ -252,6 +260,13 @@ const StudyMode = ({
       <div className="study-tip">
         <p>Tip: 단어를 보고 뜻을 먼저 떠올려 본 후 확인해보세요!</p>
       </div>
+
+      {/* AI 챗봇 */}
+      <ChatBot
+        word={currentWord}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 };
