@@ -39,11 +39,14 @@ function App() {
     // 캐시에 없는 단어 확인
     currentWordList.forEach((word, index) => {
       if (wordCache[word]) {
-        // 캐시에서 가져오기
+        // 캐시에서 가져오기 (기존 example -> examples 배열 호환 처리)
+        const cached = wordCache[word];
+        const examples = cached.examples || (cached.example ? [cached.example] : []);
         words.push({
           id: index + 1,
-          ...wordCache[word],
-          meaning: koreanMeanings[word] || wordCache[word].meaningText,
+          ...cached,
+          examples,
+          meaning: koreanMeanings[word] || cached.meaningText,
         });
       } else {
         wordsToFetch.push({ word, index });
@@ -69,7 +72,7 @@ function App() {
                 word: data.word,
                 pronunciation: data.pronunciation,
                 audioUrl: data.audioUrl,
-                example: data.exampleText,
+                examples: data.examples || [],
                 meaningText: data.meaningText,
                 meaning: koreanMeanings[word] || data.meaningText,
               };
@@ -79,7 +82,7 @@ function App() {
                 word: data.word,
                 pronunciation: data.pronunciation,
                 audioUrl: data.audioUrl,
-                example: data.exampleText,
+                examples: data.examples || [],
                 meaningText: data.meaningText,
               };
 
@@ -91,7 +94,7 @@ function App() {
                 word: word,
                 pronunciation: '',
                 audioUrl: '',
-                example: '',
+                examples: [],
                 meaning: koreanMeanings[word] || '',
                 meaningText: '',
               };
@@ -160,7 +163,7 @@ function App() {
       id: newId,
       word: wordData.word,
       meaning: wordData.meaning,
-      example: wordData.example || '',
+      examples: wordData.examples || (wordData.example ? [wordData.example] : []),
       pronunciation: wordData.pronunciation || '',
       audioUrl: wordData.audioUrl || '',
       isCustom: true,

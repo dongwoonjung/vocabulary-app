@@ -189,8 +189,10 @@ const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustom
                       <span className="col-date">{formatDate(word.learnedAt)}</span>
                     </>
                   ) : (
-                    <span className="col-example" title={word.example}>
-                      {word.example ? (word.example.length > 30 ? word.example.slice(0, 30) + '...' : word.example) : '-'}
+                    <span className="col-example" title={word.examples?.join(' / ') || ''}>
+                      {word.examples && word.examples.length > 0
+                        ? (word.examples[0].length > 30 ? word.examples[0].slice(0, 30) + '...' : word.examples[0])
+                        : '-'}
                     </span>
                   )}
                   <button

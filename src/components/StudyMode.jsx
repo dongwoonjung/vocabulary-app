@@ -189,8 +189,12 @@ const StudyMode = ({
 
           {showExample && (
             <div className="example-box">
-              {currentWord.example ? (
-                <p className="example-text">"{currentWord.example}"</p>
+              {currentWord.examples && currentWord.examples.length > 0 ? (
+                currentWord.examples.map((example, idx) => (
+                  <p key={idx} className="example-text">
+                    {idx + 1}. "{example}"
+                  </p>
+                ))
               ) : (
                 <p className="no-example">예문이 없습니다.</p>
               )}
