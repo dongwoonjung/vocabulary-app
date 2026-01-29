@@ -137,7 +137,7 @@ export const wordSet4 = [
   "transfer", "transform", "transit", "transmit", "transparent"
 ];
 
-// 단어 세트 5: 수능 고난도 (100개)
+// 단어 세트 5: 수능 고난도 (150개)
 export const wordSet5 = [
   // 추상적/학술적 어휘
   "ambiguous", "anomaly", "arbitrary", "articulate", "assertion",
@@ -169,7 +169,18 @@ export const wordSet5 = [
   "superficial", "superfluous", "susceptible", "synthesis", "tangible",
   "tentative", "trait", "transcend", "trivial", "ubiquitous",
   "undermine", "unprecedented", "validate", "versatile", "viable",
-  "vigorous", "volatile", "vulnerable", "warrant", "yield"
+  "vigorous", "volatile", "vulnerable", "warrant", "yield",
+  // 수능 지문 빈출 추가 (50개)
+  "aggregate", "alleviate", "analogous", "ascertain", "assimilate",
+  "augment", "circumvent", "coerce", "compelling", "complacent",
+  "concede", "conducive", "confine", "conjecture", "consolidate",
+  "conspicuous", "contend", "converge", "convey", "corroborate",
+  "curtail", "delegate", "depict", "deplete", "discern",
+  "disparity", "displace", "divert", "dormant", "dwindle",
+  "elaborate", "elucidate", "emulate", "endorse", "envision",
+  "ephemeral", "equivocal", "exert", "explicit", "feasible",
+  "fluctuate", "haphazard", "impede", "impetus", "inception",
+  "incessant", "induce", "infer", "inhibit", "innumerable"
 ];
 
 // 단어 세트 정보
@@ -924,7 +935,58 @@ export const koreanMeanings = {
   "volatile": "변덕스러운, 휘발성의",
   "vulnerable": "취약한, 상처받기 쉬운",
   "warrant": "정당화하다, 보증하다",
-  "yield": "산출하다, 양보하다"
+  "yield": "산출하다, 양보하다",
+
+  // 수능 지문 빈출 추가
+  "aggregate": "총계, 집합체, 모으다",
+  "alleviate": "완화하다, 경감하다",
+  "analogous": "유사한, 비슷한",
+  "ascertain": "확인하다, 알아내다",
+  "assimilate": "동화하다, 흡수하다",
+  "augment": "증가시키다, 늘리다",
+  "circumvent": "우회하다, 회피하다",
+  "coerce": "강요하다, 강제하다",
+  "compelling": "설득력 있는, 강렬한",
+  "complacent": "자기만족적인, 안주하는",
+  "concede": "인정하다, 양보하다",
+  "conducive": "도움이 되는, ~에 기여하는",
+  "confine": "제한하다, 가두다",
+  "conjecture": "추측, 추론하다",
+  "consolidate": "통합하다, 강화하다",
+  "conspicuous": "눈에 띄는, 두드러진",
+  "contend": "주장하다, 경쟁하다",
+  "converge": "모이다, 수렴하다",
+  "convey": "전달하다, 운반하다",
+  "corroborate": "확증하다, 뒷받침하다",
+  "curtail": "축소하다, 삭감하다",
+  "delegate": "위임하다, 대표자",
+  "depict": "묘사하다, 그리다",
+  "deplete": "고갈시키다, 소모하다",
+  "discern": "식별하다, 분별하다",
+  "disparity": "불균형, 격차",
+  "displace": "대체하다, 이동시키다",
+  "divert": "전환하다, 돌리다",
+  "dormant": "휴면 상태의, 잠자는",
+  "dwindle": "줄어들다, 감소하다",
+  "elaborate": "정교한, 상세히 설명하다",
+  "elucidate": "설명하다, 명확히 하다",
+  "emulate": "모방하다, 경쟁하다",
+  "endorse": "지지하다, 승인하다",
+  "envision": "상상하다, 구상하다",
+  "ephemeral": "일시적인, 덧없는",
+  "equivocal": "애매한, 모호한",
+  "exert": "발휘하다, 행사하다",
+  "feasible": "실현 가능한, 타당한",
+  "fluctuate": "변동하다, 오르내리다",
+  "haphazard": "무계획적인, 되는대로의",
+  "impede": "방해하다, 저지하다",
+  "impetus": "자극, 추진력",
+  "inception": "시작, 발단",
+  "incessant": "끊임없는, 쉴 새 없는",
+  "induce": "유도하다, 야기하다",
+  "infer": "추론하다, 추측하다",
+  "inhibit": "억제하다, 금지하다",
+  "innumerable": "무수한, 셀 수 없는"
 };
 
 // 단어를 랜덤하게 섞는 함수
