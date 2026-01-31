@@ -888,6 +888,95 @@ body {
   gap: 0.75rem;
 }
 
+/* 단어 추가 모달 입력창 */
+.search-section {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.word-input {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.word-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.word-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.search-btn {
+  padding: 1rem 1.5rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.search-btn:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+.search-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+.custom-meaning {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.custom-meaning h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.meaning-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.meaning-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.meaning-input::placeholder {
+  color: #94a3b8;
+}
+
+.custom-meaning .hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
 /* 검색 폼 */
 .search-form {
   display: flex;
