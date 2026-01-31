@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getFolders, createFolder, deleteFolder, getWordsByFolder, getCustomWords, deleteCustomWord } from '../services/supabase';
 import { dictionaryApi, playPronunciation } from '../services/dictionaryApi';
+import ChatBot from './ChatBot';
 
-const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
+const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache, onMarkAsLearned, learnedWordIds = [], onMarkAsKnown, knownWordIds = [] }) => {
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
   const [selectedFolderIds, setSelectedFolderIds] = useState([]); // 다중 선택
@@ -14,8 +15,11 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
   const [studyMode, setStudyMode] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
+  const [showExample, setShowExample] = useState(false);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [studyTitle, setStudyTitle] = useState('');
+  const [wordHistory, setWordHistory] = useState([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // 폴더 목록 로드
   useEffect(() => {
@@ -140,6 +144,8 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setStudyMode(true);
     setCurrentWordIndex(0);
     setShowMeaning(false);
+    setShowExample(false);
+    setWordHistory([]);
   };
 
   // 폴더 생성
@@ -191,6 +197,8 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setStudyMode(true);
     setCurrentWordIndex(0);
     setShowMeaning(false);
+    setShowExample(false);
+    setWordHistory([]);
   };
 
   // 폴더에서 바로 학습 시작
@@ -216,11 +224,17 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setStudyMode(true);
     setCurrentWordIndex(0);
     setShowMeaning(false);
+    setShowExample(false);
+    setWordHistory([]);
   };
 
   // 다음 단어
-  const nextWord = () => {
+  const nextWord = useCallback(() => {
+    if (folderWords[currentWordIndex]) {
+      setWordHistory(prev => [...prev, currentWordIndex]);
+    }
     setShowMeaning(false);
+    setShowExample(false);
     if (currentWordIndex < folderWords.length - 1) {
       setCurrentWordIndex(currentWordIndex + 1);
     } else {
@@ -229,13 +243,52 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
       setMultiSelectMode(false);
       setSelectedFolderIds([]);
     }
-  };
+  }, [currentWordIndex, folderWords]);
 
   // 이전 단어
-  const prevWord = () => {
+  const prevWord = useCallback(() => {
+    if (wordHistory.length > 0) {
+      const prevIndex = wordHistory[wordHistory.length - 1];
+      setWordHistory(prev => prev.slice(0, -1));
+      setCurrentWordIndex(prevIndex);
+      setShowMeaning(false);
+      setShowExample(false);
+    }
+  }, [wordHistory]);
+
+  // 암기 완료 처리
+  const handleMarkAsLearnedClick = () => {
+    const currentWord = folderWords[currentWordIndex];
+    if (currentWord && onMarkAsLearned && !learnedWordIds.includes(currentWord.id)) {
+      onMarkAsLearned(currentWord);
+    }
+    nextWord();
+  };
+
+  // 이미 알아요 처리
+  const handleMarkAsKnownClick = () => {
+    const currentWord = folderWords[currentWordIndex];
+    if (currentWord && onMarkAsKnown) {
+      onMarkAsKnown(currentWord.id);
+    }
+    // 현재 단어를 목록에서 제거하고 다음으로
+    const newWords = folderWords.filter((_, idx) => idx !== currentWordIndex);
+    setFolderWords(newWords);
+    if (newWords.length === 0) {
+      alert('모든 단어를 학습했습니다!');
+      setStudyMode(false);
+    } else if (currentWordIndex >= newWords.length) {
+      setCurrentWordIndex(newWords.length - 1);
+    }
     setShowMeaning(false);
-    if (currentWordIndex > 0) {
-      setCurrentWordIndex(currentWordIndex - 1);
+    setShowExample(false);
+  };
+
+  // 발음 재생
+  const handlePlayAudio = () => {
+    const currentWord = folderWords[currentWordIndex];
+    if (currentWord?.audioUrl) {
+      playPronunciation(currentWord.audioUrl);
     }
   };
 
@@ -244,6 +297,7 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setStudyMode(false);
     setMultiSelectMode(false);
     setSelectedFolderIds([]);
+    setWordHistory([]);
   };
 
   if (isLoading && folders.length === 0) {
@@ -253,69 +307,144 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
   // 학습 모드 UI
   if (studyMode && folderWords.length > 0) {
     const currentWord = folderWords[currentWordIndex];
+    const isAlreadyLearned = currentWord && learnedWordIds.includes(currentWord.id);
 
     return (
-      <div className="folder-study-mode">
+      <div className="study-container folder-study-active">
         <div className="study-header">
           <button className="back-btn" onClick={exitStudyMode}>
             ← 목록으로
           </button>
           <h2 className="study-title">{studyTitle}</h2>
-          <span className="progress">
-            {currentWordIndex + 1} / {folderWords.length}
-          </span>
+          <div className="study-stats">
+            <span>{currentWordIndex + 1} / {folderWords.length}</span>
+          </div>
         </div>
 
-        <div className="flashcard">
-          <div className="word-display">
-            <h1>{currentWord.word}</h1>
-            {currentWord.pronunciation && (
-              <p className="pronunciation">{currentWord.pronunciation}</p>
-            )}
-            {currentWord.audioUrl && (
-              <button
-                className="audio-btn"
-                onClick={() => playPronunciation(currentWord.audioUrl)}
-              >
-                🔊 발음 듣기
-              </button>
-            )}
-          </div>
-
-          <button
-            className="reveal-btn"
-            onClick={() => setShowMeaning(!showMeaning)}
-          >
-            {showMeaning ? '뜻 숨기기' : '뜻 보기'}
-          </button>
-
-          {showMeaning && (
-            <div className="meaning-display">
-              <p className="meaning">{currentWord.meaning}</p>
-              {currentWord.examples && currentWord.examples.length > 0 && (
-                <div className="examples">
-                  <h4>예문</h4>
-                  {currentWord.examples.slice(0, 2).map((ex, idx) => (
-                    <p key={idx}>"{ex}"</p>
-                  ))}
-                </div>
+        <div className="word-card">
+          <div className="word-main">
+            <h1 className="word-text">{currentWord.word}</h1>
+            <div className="pronunciation-row">
+              <p className="word-pronunciation">{currentWord.pronunciation}</p>
+              {currentWord.audioUrl && (
+                <button className="audio-btn" onClick={handlePlayAudio} title="발음 듣기">
+                  🔊
+                </button>
               )}
             </div>
+          </div>
+
+          {isAlreadyLearned && (
+            <div className="already-learned-badge">
+              이미 암기한 단어입니다
+            </div>
           )}
+
+          <div className="word-details">
+            <button
+              className={`reveal-btn ${showMeaning ? 'revealed' : ''}`}
+              onClick={() => setShowMeaning(!showMeaning)}
+            >
+              {showMeaning ? '뜻 숨기기' : '뜻 보기'}
+            </button>
+
+            {showMeaning && (
+              <div className="meaning-box">
+                <p className="meaning-text">{currentWord.meaning}</p>
+              </div>
+            )}
+
+            <button
+              className={`reveal-btn example-btn ${showExample ? 'revealed' : ''}`}
+              onClick={() => setShowExample(!showExample)}
+            >
+              {showExample ? '예문 숨기기' : '예문 보기'}
+            </button>
+
+            {showExample && (
+              <div className="example-box">
+                {currentWord.examples && currentWord.examples.length > 0 ? (
+                  currentWord.examples.map((example, idx) => (
+                    <p key={idx} className="example-text">
+                      {idx + 1}. "{example}"
+                    </p>
+                  ))
+                ) : (
+                  <p className="no-example">예문이 없습니다.</p>
+                )}
+              </div>
+            )}
+
+            {/* 외부 사전 링크 */}
+            <div className="dictionary-links">
+              <a
+                href={`https://search.naver.com/search.naver?where=image&query=${encodeURIComponent(currentWord.word)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dict-link naver"
+              >
+                네이버 사진
+              </a>
+              <a
+                href={`https://www.oxfordlearnersdictionaries.com/definition/english/${encodeURIComponent(currentWord.word)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="dict-link oxford"
+              >
+                Oxford 사전
+              </a>
+              <button
+                className="dict-link ai-chat"
+                onClick={() => setIsChatOpen(true)}
+              >
+                💬 AI에게 질문
+              </button>
+            </div>
+          </div>
+
+          <div className="action-buttons">
+            <button
+              className="btn-prev"
+              onClick={prevWord}
+              disabled={wordHistory.length === 0}
+            >
+              ← 이전
+            </button>
+            <button
+              className={`btn-learned ${isAlreadyLearned ? 'disabled' : ''}`}
+              onClick={handleMarkAsLearnedClick}
+              disabled={isAlreadyLearned}
+            >
+              {isAlreadyLearned ? '이미 암기함' : '암기 완료'}
+            </button>
+            <button
+              className="btn-skip"
+              onClick={nextWord}
+            >
+              다음 →
+            </button>
+          </div>
+
+          <div className="secondary-actions">
+            <button
+              className="btn-known"
+              onClick={handleMarkAsKnownClick}
+            >
+              이미 알아요 (다시 안 볼래요)
+            </button>
+          </div>
         </div>
 
-        <div className="study-controls">
-          <button
-            className="nav-btn"
-            onClick={prevWord}
-            disabled={currentWordIndex === 0}
-          >
-            ← 이전
-          </button>
-          <button className="nav-btn next" onClick={nextWord}>
-            {currentWordIndex === folderWords.length - 1 ? '완료' : '다음 →'}
-          </button>
+        <div className="study-tip">
+          <p>Tip: 단어를 보고 뜻을 먼저 떠올려 본 후 확인해보세요!</p>
         </div>
+
+        {/* AI 챗봇 */}
+        <ChatBot
+          word={currentWord}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
       </div>
     );
   }

@@ -392,6 +392,10 @@ function App() {
                 }
               }));
             }}
+            onMarkAsLearned={handleMarkAsLearned}
+            learnedWordIds={learnedWordIds}
+            onMarkAsKnown={handleMarkAsKnown}
+            knownWordIds={knownWords}
           />
         )}
       </main>
