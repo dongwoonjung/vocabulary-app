@@ -3,6 +3,7 @@ import StudyMode from './components/StudyMode';
 import ReviewMode from './components/ReviewMode';
 import WordList from './components/WordList';
 import AddWordModal from './components/AddWordModal';
+import FolderStudyMode from './components/FolderStudyMode';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { wordSets as localWordSets, koreanMeanings as localKoreanMeanings } from './data/words';
 import { getWordSets, getWordsBySet, getKoreanMeanings } from './services/supabase';
@@ -338,6 +339,13 @@ function App() {
             <span className="badge-secondary">{learnedWords.length}</span>
           )}
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'folders' ? 'active' : ''}`}
+          onClick={() => setActiveTab('folders')}
+        >
+          <span className="tab-icon">📁</span>
+          <span className="tab-label">단어장</span>
+        </button>
       </nav>
 
       <main className="main-content">
@@ -366,6 +374,24 @@ function App() {
             customWords={customWords}
             onRemoveWord={handleRemoveWord}
             onRemoveCustomWord={handleRemoveCustomWord}
+          />
+        )}
+        {activeTab === 'folders' && (
+          <FolderStudyMode
+            koreanMeanings={koreanMeanings}
+            wordCache={wordCache}
+            onUpdateCache={(word, data) => {
+              setWordCache(prev => ({
+                ...prev,
+                [word]: {
+                  word: data.word,
+                  pronunciation: data.pronunciation,
+                  audioUrl: data.audioUrl,
+                  examples: data.examples || [],
+                  meaningText: data.meaningText,
+                }
+              }));
+            }}
           />
         )}
       </main>

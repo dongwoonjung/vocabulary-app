@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { dictionaryApi, playPronunciation } from '../services/dictionaryApi';
+import { getFolders, addCustomWord } from '../services/supabase';
 
 const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
   const [word, setWord] = useState('');
@@ -8,6 +9,20 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
   const [wordInfo, setWordInfo] = useState(null);
   const [customMeaning, setCustomMeaning] = useState('');
   const [existingWordInfo, setExistingWordInfo] = useState(null);
+  const [folders, setFolders] = useState([]);
+  const [selectedFolderId, setSelectedFolderId] = useState('');
+
+  // 폴더 목록 로드
+  useEffect(() => {
+    if (isOpen) {
+      loadFolders();
+    }
+  }, [isOpen]);
+
+  const loadFolders = async () => {
+    const data = await getFolders();
+    setFolders(data);
+  };
 
   // 기본 단어 세트에서 단어 찾기
   const findWordInSets = (searchWord) => {
@@ -58,7 +73,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
     setWordInfo(data);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!wordInfo) return;
 
     const newWord = {
@@ -68,6 +83,11 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
       pronunciation: wordInfo.pronunciation,
       audioUrl: wordInfo.audioUrl,
     };
+
+    // Supabase에 저장 (폴더 선택 시)
+    if (selectedFolderId) {
+      await addCustomWord(newWord, parseInt(selectedFolderId));
+    }
 
     onAddWord(newWord);
     handleClose();
@@ -80,6 +100,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
     setWordInfo(null);
     setCustomMeaning('');
     setExistingWordInfo(null);
+    setSelectedFolderId('');
     onClose();
   };
 
@@ -196,6 +217,24 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
                 />
                 <p className="hint">한국어 뜻을 입력하지 않으면 영어 정의가 사용됩니다.</p>
               </div>
+
+              {folders.length > 0 && (
+                <div className="folder-select">
+                  <h4>폴더에 추가 (선택)</h4>
+                  <select
+                    value={selectedFolderId}
+                    onChange={(e) => setSelectedFolderId(e.target.value)}
+                    className="folder-dropdown"
+                  >
+                    <option value="">폴더 선택 안 함</option>
+                    {folders.map(folder => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           )}
         </div>
