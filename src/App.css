@@ -1931,11 +1931,90 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .folder-header h2 {
   font-size: 1.25rem;
   color: #1e293b;
+}
+
+.folder-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.multi-select-btn {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.multi-select-btn:hover {
+  background: #e2e8f0;
+}
+
+.multi-select-btn.active {
+  background: #dbeafe;
+  color: #2563eb;
+  border-color: #2563eb;
+}
+
+.multi-select-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.multi-select-bar span {
+  font-weight: 500;
+}
+
+.start-multi-study-btn {
+  padding: 0.5rem 1rem;
+  background: white;
+  color: #4f46e5;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.start-multi-study-btn:hover {
+  background: #f1f5f9;
+  transform: scale(1.02);
+}
+
+.folder-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #4f46e5;
+}
+
+.folder-item.multi-selected {
+  background: #dbeafe;
+  border: 2px solid #2563eb;
+}
+
+.study-title {
+  font-size: 1rem;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .create-folder-btn {

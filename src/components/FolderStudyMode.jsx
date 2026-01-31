@@ -5,6 +5,7 @@ import { dictionaryApi, playPronunciation } from '../services/dictionaryApi';
 const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
   const [folders, setFolders] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
+  const [selectedFolderIds, setSelectedFolderIds] = useState([]); // 다중 선택
   const [folderWords, setFolderWords] = useState([]);
   const [customWords, setCustomWords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +14,8 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
   const [studyMode, setStudyMode] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showMeaning, setShowMeaning] = useState(false);
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const [studyTitle, setStudyTitle] = useState('');
 
   // 폴더 목록 로드
   useEffect(() => {
@@ -31,8 +34,39 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setCustomWords(data);
   };
 
+  // 단어 정보 로드 헬퍼 함수
+  const loadWordInfo = async (w) => {
+    if (wordCache[w.word]) {
+      return {
+        ...w,
+        ...wordCache[w.word],
+        meaning: koreanMeanings[w.word] || wordCache[w.word]?.meaningText || ''
+      };
+    }
+
+    const { data } = await dictionaryApi.getWordInfo(w.word);
+    if (data) {
+      onUpdateCache(w.word, data);
+      return {
+        ...w,
+        ...data,
+        meaning: koreanMeanings[w.word] || data.meaningText || ''
+      };
+    }
+    return {
+      ...w,
+      meaning: koreanMeanings[w.word] || ''
+    };
+  };
+
   // 폴더 선택 시 해당 폴더의 단어 로드
   const handleSelectFolder = async (folder) => {
+    if (multiSelectMode) {
+      // 다중 선택 모드
+      toggleFolderSelection(folder.id);
+      return;
+    }
+
     setSelectedFolder(folder);
     setStudyMode(false);
     setIsLoading(true);
@@ -40,35 +74,72 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     const wordIds = await getWordsByFolder(folder.id);
     const wordsInFolder = customWords.filter(w => wordIds.includes(w.id));
 
-    // 단어 정보 로드
-    const loadedWords = await Promise.all(
-      wordsInFolder.map(async (w) => {
-        if (wordCache[w.word]) {
-          return {
-            ...w,
-            ...wordCache[w.word],
-            meaning: koreanMeanings[w.word] || wordCache[w.word]?.meaningText || ''
-          };
-        }
-
-        const { data } = await dictionaryApi.getWordInfo(w.word);
-        if (data) {
-          onUpdateCache(w.word, data);
-          return {
-            ...w,
-            ...data,
-            meaning: koreanMeanings[w.word] || data.meaningText || ''
-          };
-        }
-        return {
-          ...w,
-          meaning: koreanMeanings[w.word] || ''
-        };
-      })
-    );
+    const loadedWords = await Promise.all(wordsInFolder.map(loadWordInfo));
 
     setFolderWords(loadedWords);
     setIsLoading(false);
+  };
+
+  // 폴더 다중 선택 토글
+  const toggleFolderSelection = (folderId) => {
+    setSelectedFolderIds(prev => {
+      if (prev.includes(folderId)) {
+        return prev.filter(id => id !== folderId);
+      } else {
+        return [...prev, folderId];
+      }
+    });
+  };
+
+  // 다중 선택 모드 토글
+  const toggleMultiSelectMode = () => {
+    setMultiSelectMode(!multiSelectMode);
+    if (multiSelectMode) {
+      setSelectedFolderIds([]);
+    }
+  };
+
+  // 선택된 폴더들로 학습 시작
+  const startMultiFolderStudy = async () => {
+    if (selectedFolderIds.length === 0) {
+      alert('학습할 폴더를 선택해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // 선택된 모든 폴더에서 단어 ID 수집
+    const allWordIds = [];
+    for (const folderId of selectedFolderIds) {
+      const wordIds = await getWordsByFolder(folderId);
+      allWordIds.push(...wordIds);
+    }
+
+    // 중복 제거
+    const uniqueWordIds = [...new Set(allWordIds)];
+    const wordsToStudy = customWords.filter(w => uniqueWordIds.includes(w.id));
+
+    if (wordsToStudy.length === 0) {
+      alert('선택한 폴더에 학습할 단어가 없습니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    // 단어 정보 로드
+    const loadedWords = await Promise.all(wordsToStudy.map(loadWordInfo));
+
+    // 선택된 폴더 이름들
+    const selectedFolderNames = folders
+      .filter(f => selectedFolderIds.includes(f.id))
+      .map(f => f.name)
+      .join(', ');
+
+    setStudyTitle(selectedFolderNames);
+    setFolderWords(loadedWords);
+    setIsLoading(false);
+    setStudyMode(true);
+    setCurrentWordIndex(0);
+    setShowMeaning(false);
   };
 
   // 폴더 생성
@@ -91,6 +162,7 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     const success = await deleteFolder(folderId);
     if (success) {
       setFolders(folders.filter(f => f.id !== folderId));
+      setSelectedFolderIds(prev => prev.filter(id => id !== folderId));
       if (selectedFolder?.id === folderId) {
         setSelectedFolder(null);
         setFolderWords([]);
@@ -115,6 +187,7 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
       alert('학습할 단어가 없습니다.');
       return;
     }
+    setStudyTitle(selectedFolder.name);
     setStudyMode(true);
     setCurrentWordIndex(0);
     setShowMeaning(false);
@@ -135,33 +208,9 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
       return;
     }
 
-    // 단어 정보 로드
-    const loadedWords = await Promise.all(
-      wordsInFolder.map(async (w) => {
-        if (wordCache[w.word]) {
-          return {
-            ...w,
-            ...wordCache[w.word],
-            meaning: koreanMeanings[w.word] || wordCache[w.word]?.meaningText || ''
-          };
-        }
+    const loadedWords = await Promise.all(wordsInFolder.map(loadWordInfo));
 
-        const { data } = await dictionaryApi.getWordInfo(w.word);
-        if (data) {
-          onUpdateCache(w.word, data);
-          return {
-            ...w,
-            ...data,
-            meaning: koreanMeanings[w.word] || data.meaningText || ''
-          };
-        }
-        return {
-          ...w,
-          meaning: koreanMeanings[w.word] || ''
-        };
-      })
-    );
-
+    setStudyTitle(folder.name);
     setFolderWords(loadedWords);
     setIsLoading(false);
     setStudyMode(true);
@@ -177,6 +226,8 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     } else {
       alert('모든 단어를 학습했습니다!');
       setStudyMode(false);
+      setMultiSelectMode(false);
+      setSelectedFolderIds([]);
     }
   };
 
@@ -186,6 +237,13 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     if (currentWordIndex > 0) {
       setCurrentWordIndex(currentWordIndex - 1);
     }
+  };
+
+  // 학습 모드 종료
+  const exitStudyMode = () => {
+    setStudyMode(false);
+    setMultiSelectMode(false);
+    setSelectedFolderIds([]);
   };
 
   if (isLoading && folders.length === 0) {
@@ -199,10 +257,10 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     return (
       <div className="folder-study-mode">
         <div className="study-header">
-          <button className="back-btn" onClick={() => setStudyMode(false)}>
+          <button className="back-btn" onClick={exitStudyMode}>
             ← 목록으로
           </button>
-          <h2>{selectedFolder.name}</h2>
+          <h2 className="study-title">{studyTitle}</h2>
           <span className="progress">
             {currentWordIndex + 1} / {folderWords.length}
           </span>
@@ -267,13 +325,32 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     <div className="folder-study-mode">
       <div className="folder-header">
         <h2>내 단어장</h2>
-        <button
-          className="create-folder-btn"
-          onClick={() => setShowCreateFolder(!showCreateFolder)}
-        >
-          {showCreateFolder ? '취소' : '+ 폴더 만들기'}
-        </button>
+        <div className="folder-header-actions">
+          {folders.length > 0 && (
+            <button
+              className={`multi-select-btn ${multiSelectMode ? 'active' : ''}`}
+              onClick={toggleMultiSelectMode}
+            >
+              {multiSelectMode ? '취소' : '다중 선택'}
+            </button>
+          )}
+          <button
+            className="create-folder-btn"
+            onClick={() => setShowCreateFolder(!showCreateFolder)}
+          >
+            {showCreateFolder ? '취소' : '+ 폴더 만들기'}
+          </button>
+        </div>
       </div>
+
+      {multiSelectMode && selectedFolderIds.length > 0 && (
+        <div className="multi-select-bar">
+          <span>{selectedFolderIds.length}개 폴더 선택됨</span>
+          <button className="start-multi-study-btn" onClick={startMultiFolderStudy}>
+            선택한 폴더로 학습하기
+          </button>
+        </div>
+      )}
 
       {showCreateFolder && (
         <div className="create-folder-form">
@@ -298,33 +375,44 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
           {folders.map(folder => (
             <div
               key={folder.id}
-              className={`folder-item ${selectedFolder?.id === folder.id ? 'selected' : ''}`}
+              className={`folder-item ${selectedFolder?.id === folder.id ? 'selected' : ''} ${selectedFolderIds.includes(folder.id) ? 'multi-selected' : ''}`}
               onClick={() => handleSelectFolder(folder)}
             >
+              {multiSelectMode && (
+                <input
+                  type="checkbox"
+                  className="folder-checkbox"
+                  checked={selectedFolderIds.includes(folder.id)}
+                  onChange={() => toggleFolderSelection(folder.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )}
               <span className="folder-icon">📁</span>
               <span className="folder-name">{folder.name}</span>
-              <div className="folder-actions">
-                <button
-                  className="folder-study-btn"
-                  onClick={(e) => startStudyFromFolder(folder, e)}
-                  title="학습하기"
-                >
-                  📖
-                </button>
-                <button
-                  className="delete-folder-btn"
-                  onClick={(e) => handleDeleteFolder(folder.id, e)}
-                  title="삭제"
-                >
-                  ×
-                </button>
-              </div>
+              {!multiSelectMode && (
+                <div className="folder-actions">
+                  <button
+                    className="folder-study-btn"
+                    onClick={(e) => startStudyFromFolder(folder, e)}
+                    title="학습하기"
+                  >
+                    📖
+                  </button>
+                  <button
+                    className="delete-folder-btn"
+                    onClick={(e) => handleDeleteFolder(folder.id, e)}
+                    title="삭제"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {selectedFolder && (
+      {selectedFolder && !multiSelectMode && (
         <div className="folder-content">
           <div className="folder-content-header">
             <h3>{selectedFolder.name}</h3>
