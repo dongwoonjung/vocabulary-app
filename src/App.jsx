@@ -4,7 +4,8 @@ import ReviewMode from './components/ReviewMode';
 import WordList from './components/WordList';
 import AddWordModal from './components/AddWordModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { wordSets, koreanMeanings } from './data/words';
+import { wordSets as localWordSets, koreanMeanings as localKoreanMeanings } from './data/words';
+import { getWordSets, getWordsBySet, getKoreanMeanings } from './services/supabase';
 import { dictionaryApi } from './services/dictionaryApi';
 import './App.css';
 
@@ -16,8 +17,14 @@ function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedWordSet, setSelectedWordSet] = useLocalStorage('vocabulary-selected-set', 1);
 
+  // Supabase에서 가져온 데이터 (없으면 로컬 데이터 사용)
+  const [wordSets, setWordSets] = useState(localWordSets);
+  const [koreanMeanings, setKoreanMeanings] = useState(localKoreanMeanings);
+  const [supabaseWords, setSupabaseWords] = useState({});
+  const [dataSource, setDataSource] = useState('loading'); // 'supabase' | 'local' | 'loading'
+
   // 현재 선택된 단어 세트의 단어 목록
-  const currentWordList = wordSets[selectedWordSet]?.words || wordSets[1].words;
+  const currentWordList = supabaseWords[selectedWordSet] || wordSets[selectedWordSet]?.words || wordSets[1].words;
 
   // API에서 가져온 단어 데이터 캐시
   const [wordCache, setWordCache] = useLocalStorage('vocabulary-word-cache', {});
@@ -25,10 +32,74 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 });
 
+  // Supabase에서 초기 데이터 로드
+  useEffect(() => {
+    const loadSupabaseData = async () => {
+      try {
+        // 한국어 뜻 가져오기
+        const meanings = await getKoreanMeanings();
+        if (meanings && Object.keys(meanings).length > 0) {
+          setKoreanMeanings(meanings);
+        }
+
+        // 단어 세트 정보 가져오기
+        const sets = await getWordSets();
+        if (sets && sets.length > 0) {
+          const formattedSets = {};
+          sets.forEach(set => {
+            formattedSets[set.set_number] = {
+              name: set.name,
+              words: [] // 나중에 로드
+            };
+          });
+          setWordSets(prev => ({ ...prev, ...formattedSets }));
+        }
+
+        // 현재 선택된 세트의 단어 가져오기
+        const words = await getWordsBySet(selectedWordSet);
+        if (words && words.length > 0) {
+          const wordList = words.map(w => w.word);
+          setSupabaseWords(prev => ({ ...prev, [selectedWordSet]: wordList }));
+          setDataSource('supabase');
+          console.log(`Supabase에서 세트 ${selectedWordSet} 단어 ${wordList.length}개 로드 완료`);
+        } else {
+          setDataSource('local');
+          console.log('Supabase 데이터 없음, 로컬 데이터 사용');
+        }
+      } catch (error) {
+        console.error('Supabase 데이터 로드 실패:', error);
+        setDataSource('local');
+      }
+    };
+
+    loadSupabaseData();
+  }, []);
+
+  // 단어 세트 변경 시 해당 세트 단어 로드
+  useEffect(() => {
+    const loadSetWords = async () => {
+      if (supabaseWords[selectedWordSet]) return; // 이미 로드됨
+
+      try {
+        const words = await getWordsBySet(selectedWordSet);
+        if (words && words.length > 0) {
+          const wordList = words.map(w => w.word);
+          setSupabaseWords(prev => ({ ...prev, [selectedWordSet]: wordList }));
+        }
+      } catch (error) {
+        console.error(`세트 ${selectedWordSet} 로드 실패:`, error);
+      }
+    };
+
+    if (dataSource === 'supabase') {
+      loadSetWords();
+    }
+  }, [selectedWordSet, dataSource]);
+
   // 앱 시작 시 또는 단어 세트 변경 시 단어 데이터 로드
   useEffect(() => {
     loadWords();
-  }, [selectedWordSet]);
+  }, [selectedWordSet, currentWordList]);
 
   const loadWords = async () => {
     setIsLoading(true);
