@@ -1925,6 +1925,32 @@ body {
   color: #1e293b;
 }
 
+.folder-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.folder-study-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #dbeafe;
+  color: #2563eb;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folder-study-btn:hover {
+  background: #bfdbfe;
+  transform: scale(1.1);
+}
+
 .delete-folder-btn {
   width: 28px;
   height: 28px;
@@ -1935,6 +1961,9 @@ body {
   font-size: 1.25rem;
   cursor: pointer;
   opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-folder-btn:hover {

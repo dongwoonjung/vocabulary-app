@@ -120,6 +120,55 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
     setShowMeaning(false);
   };
 
+  // 폴더에서 바로 학습 시작
+  const startStudyFromFolder = async (folder, e) => {
+    e.stopPropagation();
+    setSelectedFolder(folder);
+    setIsLoading(true);
+
+    const wordIds = await getWordsByFolder(folder.id);
+    const wordsInFolder = customWords.filter(w => wordIds.includes(w.id));
+
+    if (wordsInFolder.length === 0) {
+      alert('이 폴더에 학습할 단어가 없습니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    // 단어 정보 로드
+    const loadedWords = await Promise.all(
+      wordsInFolder.map(async (w) => {
+        if (wordCache[w.word]) {
+          return {
+            ...w,
+            ...wordCache[w.word],
+            meaning: koreanMeanings[w.word] || wordCache[w.word]?.meaningText || ''
+          };
+        }
+
+        const { data } = await dictionaryApi.getWordInfo(w.word);
+        if (data) {
+          onUpdateCache(w.word, data);
+          return {
+            ...w,
+            ...data,
+            meaning: koreanMeanings[w.word] || data.meaningText || ''
+          };
+        }
+        return {
+          ...w,
+          meaning: koreanMeanings[w.word] || ''
+        };
+      })
+    );
+
+    setFolderWords(loadedWords);
+    setIsLoading(false);
+    setStudyMode(true);
+    setCurrentWordIndex(0);
+    setShowMeaning(false);
+  };
+
   // 다음 단어
   const nextWord = () => {
     setShowMeaning(false);
@@ -254,12 +303,22 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache }) => {
             >
               <span className="folder-icon">📁</span>
               <span className="folder-name">{folder.name}</span>
-              <button
-                className="delete-folder-btn"
-                onClick={(e) => handleDeleteFolder(folder.id, e)}
-              >
-                ×
-              </button>
+              <div className="folder-actions">
+                <button
+                  className="folder-study-btn"
+                  onClick={(e) => startStudyFromFolder(folder, e)}
+                  title="학습하기"
+                >
+                  📖
+                </button>
+                <button
+                  className="delete-folder-btn"
+                  onClick={(e) => handleDeleteFolder(folder.id, e)}
+                  title="삭제"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           ))}
         </div>
