@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { getFolders, createFolder, addWordToFolder, getCustomWords } from '../services/supabase';
+import { getFolders, createFolder, addWordToFolder, getCustomWords, addCustomWord } from '../services/supabase';
 
 const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustomWord }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,11 +57,26 @@ const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustom
   const handleSaveToFolder = async () => {
     if (!selectedFolderId || !selectedWord) return;
 
-    if (selectedWord.supabaseId) {
-      await addWordToFolder(selectedWord.supabaseId, parseInt(selectedFolderId));
+    try {
+      if (selectedWord.supabaseId) {
+        // 이미 Supabase에 있는 단어
+        await addWordToFolder(selectedWord.supabaseId, parseInt(selectedFolderId));
+      } else {
+        // Supabase에 없는 단어 - 먼저 저장 후 폴더에 추가
+        const wordData = {
+          word: selectedWord.word,
+          meaning: selectedWord.meaning || '',
+        };
+        const savedWord = await addCustomWord(wordData, parseInt(selectedFolderId));
+        if (savedWord) {
+          // supabaseCustomWords 업데이트
+          setSupabaseCustomWords(prev => [savedWord, ...prev]);
+        }
+      }
       alert(`"${selectedWord.word}"가 폴더에 추가되었습니다.`);
-    } else {
-      alert('이 단어는 Supabase에 저장되어 있지 않습니다. 단어 추가 시 폴더를 선택해주세요.');
+    } catch (error) {
+      console.error('폴더에 추가 실패:', error);
+      alert('폴더에 추가하는 중 오류가 발생했습니다.');
     }
 
     setShowFolderModal(false);
