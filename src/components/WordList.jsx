@@ -1,9 +1,80 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { getFolders, createFolder, addWordToFolder, getCustomWords } from '../services/supabase';
 
 const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustomWord }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [activeFilter, setActiveFilter] = useState('learned'); // 'learned', 'custom'
+
+  // 폴더 관련 상태
+  const [folders, setFolders] = useState([]);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [selectedWord, setSelectedWord] = useState(null);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState('');
+  const [supabaseCustomWords, setSupabaseCustomWords] = useState([]);
+
+  // 폴더 및 Supabase 단어 로드
+  useEffect(() => {
+    loadFolders();
+    loadSupabaseCustomWords();
+  }, []);
+
+  const loadFolders = async () => {
+    const data = await getFolders();
+    setFolders(data);
+  };
+
+  const loadSupabaseCustomWords = async () => {
+    const data = await getCustomWords();
+    setSupabaseCustomWords(data);
+  };
+
+  // 폴더에 추가 버튼 클릭
+  const handleAddToFolder = (word) => {
+    // Supabase에서 해당 단어의 ID 찾기
+    const supabaseWord = supabaseCustomWords.find(w => w.word === word.word);
+    if (supabaseWord) {
+      setSelectedWord({ ...word, supabaseId: supabaseWord.id });
+    } else {
+      setSelectedWord(word);
+    }
+    setShowFolderModal(true);
+  };
+
+  // 폴더 생성
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    const newFolder = await createFolder(newFolderName.trim());
+    if (newFolder) {
+      setFolders([newFolder, ...folders]);
+      setNewFolderName('');
+      setSelectedFolderId(newFolder.id.toString());
+    }
+  };
+
+  // 폴더에 단어 저장
+  const handleSaveToFolder = async () => {
+    if (!selectedFolderId || !selectedWord) return;
+
+    if (selectedWord.supabaseId) {
+      await addWordToFolder(selectedWord.supabaseId, parseInt(selectedFolderId));
+      alert(`"${selectedWord.word}"가 폴더에 추가되었습니다.`);
+    } else {
+      alert('이 단어는 Supabase에 저장되어 있지 않습니다. 단어 추가 시 폴더를 선택해주세요.');
+    }
+
+    setShowFolderModal(false);
+    setSelectedWord(null);
+    setSelectedFolderId('');
+  };
+
+  const closeFolderModal = () => {
+    setShowFolderModal(false);
+    setSelectedWord(null);
+    setSelectedFolderId('');
+    setNewFolderName('');
+  };
 
   const filteredAndSortedWords = useMemo(() => {
     // 활성 필터에 따라 단어 목록 선택
@@ -168,7 +239,10 @@ const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustom
                   <span className="col-date">학습일</span>
                 </>
               ) : (
-                <span className="col-example">예문</span>
+                <>
+                  <span className="col-example">예문</span>
+                  <span className="col-folder">폴더</span>
+                </>
               )}
               <span className="col-action">삭제</span>
             </div>
@@ -189,11 +263,19 @@ const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustom
                       <span className="col-date">{formatDate(word.learnedAt)}</span>
                     </>
                   ) : (
-                    <span className="col-example" title={word.examples?.join(' / ') || ''}>
-                      {word.examples && word.examples.length > 0
-                        ? (word.examples[0].length > 30 ? word.examples[0].slice(0, 30) + '...' : word.examples[0])
-                        : '-'}
-                    </span>
+                    <>
+                      <span className="col-example" title={word.examples?.join(' / ') || ''}>
+                        {word.examples && word.examples.length > 0
+                          ? (word.examples[0].length > 30 ? word.examples[0].slice(0, 30) + '...' : word.examples[0])
+                          : '-'}
+                      </span>
+                      <button
+                        className="col-folder btn-folder"
+                        onClick={() => handleAddToFolder(word)}
+                      >
+                        📁
+                      </button>
+                    </>
                   )}
                   <button
                     className="col-action btn-delete"
@@ -212,6 +294,62 @@ const WordList = ({ learnedWords, customWords = [], onRemoveWord, onRemoveCustom
             </div>
           )}
         </>
+      )}
+
+      {/* 폴더 추가 모달 */}
+      {showFolderModal && (
+        <div className="folder-modal-overlay" onClick={closeFolderModal}>
+          <div className="folder-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="folder-modal-header">
+              <h3>폴더에 추가</h3>
+              <button className="close-btn" onClick={closeFolderModal}>×</button>
+            </div>
+            <div className="folder-modal-body">
+              <p className="selected-word">"{selectedWord?.word}"</p>
+
+              {folders.length > 0 && (
+                <div className="folder-select-section">
+                  <label>기존 폴더 선택</label>
+                  <select
+                    value={selectedFolderId}
+                    onChange={(e) => setSelectedFolderId(e.target.value)}
+                  >
+                    <option value="">폴더 선택...</option>
+                    {folders.map(folder => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="folder-create-section">
+                <label>새 폴더 만들기</label>
+                <div className="create-folder-row">
+                  <input
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="폴더 이름..."
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                  />
+                  <button onClick={handleCreateFolder}>만들기</button>
+                </div>
+              </div>
+            </div>
+            <div className="folder-modal-footer">
+              <button className="cancel-btn" onClick={closeFolderModal}>취소</button>
+              <button
+                className="save-btn"
+                onClick={handleSaveToFolder}
+                disabled={!selectedFolderId}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
