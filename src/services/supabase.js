@@ -101,6 +101,40 @@ export const upsertKoreanMeaning = async (word, meaning) => {
   return data;
 };
 
+// 어원 추가/수정
+export const upsertEtymology = async (word, etymology) => {
+  const { data, error } = await supabase
+    .from('etymologies')
+    .upsert([{ word, etymology }], { onConflict: 'word' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error upserting etymology:', error);
+    return null;
+  }
+  return data;
+};
+
+// 어원 가져오기
+export const getEtymologies = async () => {
+  const { data, error } = await supabase
+    .from('etymologies')
+    .select('*');
+
+  if (error) {
+    console.error('Error fetching etymologies:', error);
+    return {};
+  }
+
+  // word를 키로 하는 객체로 변환
+  const etymologyMap = {};
+  data.forEach(item => {
+    etymologyMap[item.word] = item.etymology;
+  });
+  return etymologyMap;
+};
+
 // ===== 폴더 관련 함수 =====
 
 // 모든 폴더 가져오기
@@ -213,7 +247,12 @@ export const addCustomWord = async (wordData, folderId = null) => {
     await upsertKoreanMeaning(wordData.word, wordData.meaning);
   }
 
-  // 3. 폴더에 추가
+  // 3. 어원 추가
+  if (wordData.etymology) {
+    await upsertEtymology(wordData.word, wordData.etymology);
+  }
+
+  // 4. 폴더에 추가
   if (folderId && wordResult) {
     await addWordToFolder(wordResult.id, folderId);
   }

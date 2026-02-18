@@ -8,6 +8,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
   const [error, setError] = useState('');
   const [wordInfo, setWordInfo] = useState(null);
   const [customMeaning, setCustomMeaning] = useState('');
+  const [etymology, setEtymology] = useState(''); // 어원
   const [existingWordInfo, setExistingWordInfo] = useState(null);
   const [folders, setFolders] = useState([]);
   const [selectedFolderId, setSelectedFolderId] = useState('');
@@ -79,6 +80,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
     const newWord = {
       word: wordInfo.word,
       meaning: customMeaning || wordInfo.meaningText,
+      etymology: etymology || '', // 어원
       example: wordInfo.exampleText,
       pronunciation: wordInfo.pronunciation,
       audioUrl: wordInfo.audioUrl,
@@ -99,6 +101,7 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
     setError('');
     setWordInfo(null);
     setCustomMeaning('');
+    setEtymology('');
     setExistingWordInfo(null);
     setSelectedFolderId('');
     onClose();
@@ -216,6 +219,18 @@ const AddWordModal = ({ isOpen, onClose, onAddWord, wordSets, onGoToWord }) => {
                   className="meaning-input"
                 />
                 <p className="hint">한국어 뜻을 입력하지 않으면 영어 정의가 사용됩니다.</p>
+              </div>
+
+              <div className="custom-etymology">
+                <h4>어원 (선택)</h4>
+                <textarea
+                  value={etymology}
+                  onChange={(e) => setEtymology(e.target.value)}
+                  placeholder="예: 라틴어 'abandonare'에서 유래, ab-(떠나다) + bandon(통제)"
+                  className="etymology-input"
+                  rows={3}
+                />
+                <p className="hint">단어의 어원이나 유래를 입력하면 암기에 도움이 됩니다.</p>
               </div>
 
               {folders.length > 0 && (

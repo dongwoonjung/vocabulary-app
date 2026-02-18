@@ -977,6 +977,46 @@ body {
   margin-top: 0.5rem;
 }
 
+/* 어원 입력 */
+.custom-etymology {
+  margin-top: 1.5rem;
+}
+
+.custom-etymology h4 {
+  font-size: 0.95rem;
+  color: #334155;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.etymology-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.etymology-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.etymology-input::placeholder {
+  color: #94a3b8;
+}
+
+.custom-etymology .hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
 /* 검색 폼 */
 .search-form {
   display: flex;
