@@ -11,7 +11,7 @@ import { dictionaryApi } from './services/dictionaryApi';
 import './App.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('study');
+  const [activeTab, setActiveTab] = useState('folders'); // 단어장(직접 추가 단어)을 기본 탭으로
   const [learnedWords, setLearnedWords] = useLocalStorage('vocabulary-learned-words', []);
   const [customWords, setCustomWords] = useLocalStorage('vocabulary-custom-words', []);
   const [knownWords, setKnownWords] = useLocalStorage('vocabulary-known-words', []); // 이미 아는 단어
@@ -313,11 +313,18 @@ function App() {
 
       <nav className="tab-navigation">
         <button
+          className={`tab-btn ${activeTab === 'folders' ? 'active' : ''}`}
+          onClick={() => setActiveTab('folders')}
+        >
+          <span className="tab-icon">📁</span>
+          <span className="tab-label">내 단어장</span>
+        </button>
+        <button
           className={`tab-btn ${activeTab === 'study' ? 'active' : ''}`}
           onClick={() => setActiveTab('study')}
         >
           <span className="tab-icon">📚</span>
-          <span className="tab-label">학습</span>
+          <span className="tab-label">기본 단어</span>
         </button>
         <button
           className={`tab-btn ${activeTab === 'review' ? 'active' : ''}`}
@@ -334,17 +341,10 @@ function App() {
           onClick={() => setActiveTab('list')}
         >
           <span className="tab-icon">📋</span>
-          <span className="tab-label">내 단어</span>
+          <span className="tab-label">암기 목록</span>
           {learnedWords.length > 0 && (
             <span className="badge-secondary">{learnedWords.length}</span>
           )}
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'folders' ? 'active' : ''}`}
-          onClick={() => setActiveTab('folders')}
-        >
-          <span className="tab-icon">📁</span>
-          <span className="tab-label">단어장</span>
         </button>
       </nav>
 
