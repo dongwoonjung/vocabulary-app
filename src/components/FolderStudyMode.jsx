@@ -38,6 +38,16 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache, onMarkAsLea
     setCustomWords(data);
   };
 
+  // Fisher-Yates 셔플 알고리즘
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   // 단어 정보 로드 헬퍼 함수
   const loadWordInfo = async (w) => {
     if (wordCache[w.word]) {
@@ -132,6 +142,9 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache, onMarkAsLea
     // 단어 정보 로드
     const loadedWords = await Promise.all(wordsToStudy.map(loadWordInfo));
 
+    // 단어 순서 랜덤 섞기
+    const shuffledWords = shuffleArray(loadedWords);
+
     // 선택된 폴더 이름들
     const selectedFolderNames = folders
       .filter(f => selectedFolderIds.includes(f.id))
@@ -139,7 +152,7 @@ const FolderStudyMode = ({ koreanMeanings, wordCache, onUpdateCache, onMarkAsLea
       .join(', ');
 
     setStudyTitle(selectedFolderNames);
-    setFolderWords(loadedWords);
+    setFolderWords(shuffledWords);
     setIsLoading(false);
     setStudyMode(true);
     setCurrentWordIndex(0);
